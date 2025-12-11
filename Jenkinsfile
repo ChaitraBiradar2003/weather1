@@ -2,21 +2,14 @@ pipeline {
     agent any
 
     environment {
-        IMAGE = "YOUR_DOCKERHUB_USERNAME/weather-app"   // change this
+        IMAGE = "24p1245/weather-app1"
         DOCKER_CREDS = credentials('dockerhub-creds')
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh 'mvn -B clean package -DskipTests'
             }
         }
 
@@ -28,25 +21,17 @@ pipeline {
 
         stage('Docker Login and Push') {
             steps {
-                sh '''
-                echo "$DOCKER_CREDS_PSW" | docker login -u "$DOCKER_CREDS_USR" --password-stdin
-                docker push ${IMAGE}:latest
-                '''
+                sh "echo ${DOCKER_CREDS_PSW} | docker login -u ${DOCKER_CREDS_USR} --password-stdin"
+                sh "docker push ${IMAGE}:latest"
             }
         }
 
         stage('Deploy to EC2') {
             steps {
-                sshagent(['ec2-ssh-key']) {
-                    sh '''
-                    ssh -o StrictHostKeyChecking=no ec2-user@EC2_PUBLIC_IP "
-                        docker pull ${IMAGE}:latest &&
-                        docker stop weather || true &&
-                        docker rm weather || true &&
-                        docker run -d -p 8080:8080 --name weather ${IMAGE}:latest
-                    "
-                    '''
-                }
+                sh """
+                ssh -o StrictHostKeyChecking=no ubuntu@YOUR_EC2_IP \\
+                'docker pull ${IMAGE}:latest && docker stop weather || true && docker rm weather || true && docker run -d -p 8080:80 --name weather ${IMAGE}:latest'
+                """
             }
         }
     }
