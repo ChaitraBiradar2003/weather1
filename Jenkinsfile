@@ -13,6 +13,12 @@ pipeline {
             }
         }
 
+        stage('Build') {
+            steps {
+                sh 'mvn -B clean package -DskipTests'
+            }
+        }
+
         stage('Docker Build') {
             steps {
                 sh "docker build -t ${IMAGE}:latest ."
@@ -28,10 +34,14 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                sh """
-                ssh -o StrictHostKeyChecking=no ubuntu@YOUR_EC2_IP \\
-                'docker pull ${IMAGE}:latest && docker stop weather || true && docker rm weather || true && docker run -d -p 8080:80 --name weather ${IMAGE}:latest'
-                """
+                sh '''
+                ssh -o StrictHostKeyChecking=no -i /home/ubuntu/Weather-App1-Pem-Key.pem ubuntu@13.48.55.161 "
+                    docker pull 24p1245/weather-app1:latest &&
+                    docker stop weather-app1 || true &&
+                    docker rm weather-app1 || true &&
+                    docker run -d -p 8080:8080 --name weather-app1 24p1245/weather-app1:latest
+                "
+                '''
             }
         }
     }
