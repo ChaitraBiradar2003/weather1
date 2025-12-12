@@ -25,7 +25,7 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t ${IMAGE}:latest springboot/springboot"
+                sh 'cd springboot/springboot && docker build -t ${IMAGE}:latest .'
             }
         }
 
