@@ -25,7 +25,9 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh 'cd springboot/springboot && docker build -t ${IMAGE}:latest .'
+               dir('springboot/springboot') {
+                    sh 'docker build -t $IMAGE .'
+                }
             }
         }
 
@@ -38,13 +40,10 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
+                 // Example: using scp & ssh to copy and run on EC2
                 sh '''
-                ssh -o StrictHostKeyChecking=no -i /home/ubuntu/Weather-App1-Pem-Key.pem ubuntu@13.48.55.161 "
-                    docker pull 24p1245/weather-app1:latest &&
-                    docker stop weather-app1 || true &&
-                    docker rm weather-app1 || true &&
-                    docker run -d -p 8080:8080 --name weather-app1 24p1245/weather-app1:latest
-                "
+                scp -i Weather-App1-Pem-Key.pem docker-compose.yml ubuntu@:16.171.114.154 /home/ubuntu/
+                ssh -i Weather-App1-Pem-Key.pem ubuntu@16.171.114.154  "docker pull $IMAGE && docker-compose up -d"
                 '''
             }
         }
