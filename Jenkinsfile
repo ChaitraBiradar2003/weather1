@@ -7,6 +7,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -15,14 +16,16 @@ pipeline {
 
         stage('Build') {
             steps {
-                //sh 'mvn -B clean package -DskipTests'
-                sh 'mvn -f springboot/springboot/pom.xml clean package -DskipTests'
+                 // Use Maven wrapper from root if present, or system Maven
+         sh 'mvn -f springboot/springboot/pom.xml clean package -DskipTests'
+        // OR if mvnw is not in root, use:
+        // sh 'mvn clean package -DskipTests'
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t ${IMAGE}:latest ."
+                sh "docker build -t ${IMAGE}:latest springboot/springboot"
             }
         }
 

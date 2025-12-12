@@ -1,13 +1,27 @@
-# Build stage
-FROM maven:3.9.5-eclipse-temurin-17 AS build
+# ------------------------
+# Build stage: Maven + JDK 21
+# ------------------------
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY pom.xml .
-COPY springboot/springboot/ .
+
+# Copy pom and source code
+COPY springboot/springboot/pom.xml .
+COPY springboot/springboot/ .  
+
+# Build the Spring Boot jar
 RUN mvn clean package -DskipTests
 
-# Run stage
-FROM openjdk:17-jdk-slim
+# ------------------------
+# Run stage: JDK 21 runtime
+# ------------------------
+FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /app
+
+# Copy jar from build stage
 COPY --from=build /app/target/*.jar app.jar
+
+# Expose port
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","app.jar"]
+
+# Run the jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
