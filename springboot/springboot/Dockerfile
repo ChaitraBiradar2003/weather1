@@ -5,8 +5,8 @@ FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
 # Copy pom and source code
-COPY springboot/springboot/pom.xml .
-COPY springboot/springboot/ .  
+COPY pom.xml .
+COPY src ./src
 
 # Build the Spring Boot jar
 RUN mvn clean package -DskipTests
