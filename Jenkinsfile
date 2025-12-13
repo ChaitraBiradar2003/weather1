@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         IMAGE = "24p1245/weather-app1"
+        DOCKER_CREDS = credentials('dockerhub-creds')
     }
 
     stages {
@@ -15,40 +16,34 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn -f springboot/springboot/pom.xml clean package -DskipTests'
+                 // Use Maven wrapper from root if present, or system Maven
+         sh 'mvn -f springboot/springboot/pom.xml clean package -DskipTests'
+        // OR if mvnw is not in root, use:
+        // sh 'mvn clean package -DskipTests'
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh 'cd springboot/springboot && docker build -t ${IMAGE}:latest .'
+               dir('springboot/springboot') {
+                    sh 'docker build -t $IMAGE .'
+                }
             }
         }
 
         stage('Docker Login and Push') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh '''
-                      echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                      docker push ${IMAGE}:latest
-                    '''
-                }
+                sh "echo ${DOCKER_CREDS_PSW} | docker login -u ${DOCKER_CREDS_USR} --password-stdin"
+                sh "docker push ${IMAGE}:latest"
             }
         }
 
         stage('Deploy to EC2') {
             steps {
+                 // Example: using scp & ssh to copy and run on EC2
                 sh '''
-                ssh -o StrictHostKeyChecking=no -i /home/ubuntu/Weather-App1-Pem-Key.pem ubuntu@13.48.55.161 "
-                    docker pull 24p1245/weather-app1:latest &&
-                    docker stop weather-app1 || true &&
-                    docker rm weather-app1 || true &&
-                    docker run -d -p 8080:8080 --name weather-app1 24p1245/weather-app1:latest
-                "
+                scp -i Weather-App1-Pem-Key.pem docker-compose.yml ubuntu@:16.171.114.154 /home/ubuntu/
+                ssh -i Weather-App1-Pem-Key.pem ubuntu@16.171.114.154  "docker pull $IMAGE && docker-compose up -d"
                 '''
             }
         }
