@@ -42,8 +42,8 @@ pipeline {
             steps {
                  // Example: using scp & ssh to copy and run on EC2
                 sh '''
-                scp -i Weather-App1-Pem-Key.pem docker-compose.yml ubuntu@:16.171.114.154 /home/ubuntu/
-                ssh -i Weather-App1-Pem-Key.pem ubuntu@16.171.114.154  "docker pull $IMAGE && docker-compose up -d"
+                scp -i Weather-App1-Pem-Key.pem docker-compose.yml ubuntu@:51.20.76.196 /home/ubuntu/
+                ssh -i Weather-App1-Pem-Key.pem ubuntu@51.20.76.196 "docker pull $IMAGE && docker-compose up -d"
                 '''
             }
         }

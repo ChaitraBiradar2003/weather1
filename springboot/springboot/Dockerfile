@@ -1,13 +1,12 @@
-# Build stage
-FROM maven:3.9.5-eclipse-temurin-17 AS build
+# Stage 1: Build Spring Boot app
+FROM maven:3.9.5-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
-COPY springboot/springboot/ .
+COPY . .
 RUN mvn clean package -DskipTests
 
-# Run stage
-FROM openjdk:17-jdk-slim
+# Stage 2: Run Spring Boot app
+FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["java","-jar","app.jar"]
+COPY --from=build /app/target/springboot-0.0.1-SNAPSHOT.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
