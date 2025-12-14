@@ -50,15 +50,24 @@ pipeline {
     stage('Deploy to EC2') {
     steps {
         sh '''
-        chmod 600 ${WORKSPACE}/Weather-App1-Pem-Key.pem
+        chmod 600 /var/lib/jenkins/weather-jenkins-key
 
         scp -o StrictHostKeyChecking=no \
-        -i ${WORKSPACE}/Weather-App1-Pem-Key.pem \
+        -i /var/lib/jenkins/weather-jenkins-key \
         ${WORKSPACE}/springboot/springboot/docker-compose.yml \
         ubuntu@13.61.143.74:/home/ubuntu/
+
+        ssh -o StrictHostKeyChecking=no \
+        -i /var/lib/jenkins/weather-jenkins-key \
+        ubuntu@13.61.143.74 "
+            docker pull ssk2003/weather-app1:latest
+            docker compose down || true
+            docker compose up -d
+        "
         '''
     }
 }
+
 
 
         
