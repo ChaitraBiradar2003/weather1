@@ -47,27 +47,26 @@ pipeline {
 }
 
 
-       stage('Deploy to EC2') {
+     stage('Deploy to EC2') {
     steps {
         sh '''
-            # Download docker-compose.yml if not in workspace
-            if [ ! -f docker-compose.yml ]; then
-                wget -O docker-compose.yml https://raw.githubusercontent.com/24p1245-ssk/Weather-App1/main/docker-compose.yml
-            fi
+        scp -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -i Weather-App1-Pem-Key.pem \
+            docker-compose.yml ubuntu@13.61.143.74:/home/ubuntu/
 
-            # Copy file to EC2
-            scp -i Weather-App1-Pem-Key.pem docker-compose.yml ubuntu@13.61.143.74:/home/ubuntu/
-
-            # SSH into EC2 and deploy
-            ssh -i Weather-App1-Pem-Key.pem ubuntu@13.61.143.74 '
-                cd /home/ubuntu
-                docker compose down || true
-                docker compose pull
-                docker compose up -d
-            '
+        ssh -o StrictHostKeyChecking=no \
+            -o UserKnownHostsFile=/dev/null \
+            -i Weather-App1-Pem-Key.pem ubuntu@13.61.143.74 << EOF
+            cd /home/ubuntu
+            docker compose down || true
+            docker compose pull
+            docker compose up -d
+        EOF
         '''
     }
 }
+
 
 
 
