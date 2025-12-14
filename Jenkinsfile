@@ -49,22 +49,17 @@ pipeline {
 
     stage('Deploy to EC2') {
     steps {
-        // Ensure the PEM file has correct permissions
-        sh 'chmod 600 Weather-App1-Pem-Key.pem'
-
-        // Copy docker-compose.yml to EC2
         sh '''
-        scp -o StrictHostKeyChecking=no -i Weather-App1-Pem-Key.pem \
-        docker-compose.yml ubuntu@13.61.143.74:/home/ubuntu/
-        '''
+        chmod 600 ${WORKSPACE}/Weather-App1-Pem-Key.pem
 
-        // Optional: run docker-compose on EC2
-        sh '''
-        ssh -o StrictHostKeyChecking=no -i Weather-App1-Pem-Key.pem ubuntu@13.61.143.74 \
-        'cd /home/ubuntu && docker-compose up -d'
+        scp -o StrictHostKeyChecking=no \
+        -i ${WORKSPACE}/Weather-App1-Pem-Key.pem \
+        ${WORKSPACE}/springboot/springboot/docker-compose.yml \
+        ubuntu@13.61.143.74:/home/ubuntu/
         '''
     }
 }
+
 
         
 
