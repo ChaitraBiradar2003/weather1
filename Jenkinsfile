@@ -50,13 +50,21 @@ pipeline {
 
 
         stage('Deploy to EC2') {
-            steps {
-                 // Example: using scp & ssh to copy and run on EC2
-                sh '''
-                scp -i Weather-App1-Pem-Key.pem docker-compose.yml ubuntu@:13.61.143.74   /home/ubuntu/
-                ssh -i Weather-App1-Pem-Key.pem ubuntu@13.61.143.74   "docker pull $IMAGE && docker-compose up -d"
-                '''
-            }
-        }
+    steps {
+        sh '''
+            # Copy docker-compose.yml from Jenkins workspace to EC2
+            scp -i Weather-App1-Pem-Key.pem docker-compose.yml ubuntu@13.61.143.74:/home/ubuntu/
+
+            # SSH into EC2 and deploy
+            ssh -i Weather-App1-Pem-Key.pem ubuntu@13.61.143.74 '
+                cd /home/ubuntu
+                docker-compose down || true
+                docker-compose pull
+                docker-compose up -d
+            '
+        '''
+    }
+}
+
     }
 }
