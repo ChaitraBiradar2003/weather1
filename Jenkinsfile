@@ -32,17 +32,20 @@ pipeline {
         }
 
         stage('Docker Login and Push') {
-    withCredentials([usernamePassword(
-        credentialsId: 'dockerhub-creds',
-        usernameVariable: 'DOCKER_USER',
-        passwordVariable: 'DOCKER_PASS'
-    )]) {
-        sh '''
-            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-            docker push 24p1245/weather-app1:latest
-        '''
+    steps {
+        withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-creds',
+            usernameVariable: 'DOCKER_USER',
+            passwordVariable: 'DOCKER_PASS'
+        )]) {
+            sh '''
+                echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                docker push ssk2003/weather-app1:latest
+            '''
+        }
     }
 }
+
 
 
 
