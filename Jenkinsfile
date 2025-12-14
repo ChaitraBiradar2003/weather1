@@ -52,7 +52,10 @@ pipeline {
         stage('Deploy to EC2') {
     steps {
         sh '''
-            # Copy docker-compose.yml from Jenkins workspace to EC2
+            # Download docker-compose.yml directly from GitHub
+            wget -O docker-compose.yml https://raw.githubusercontent.com/24p1245-ssk/Weather-App1/main/docker-compose.yml
+
+            # Copy to EC2
             scp -i Weather-App1-Pem-Key.pem docker-compose.yml ubuntu@13.61.143.74:/home/ubuntu/
 
             # SSH into EC2 and deploy
