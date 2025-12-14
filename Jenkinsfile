@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE = "24p1245/weather-app1"
+        IMAGE = "ssk2003/weather-app1"
         DOCKER_CREDS = credentials('dockerhub-creds')
     }
 
@@ -32,18 +32,26 @@ pipeline {
         }
 
         stage('Docker Login and Push') {
-            steps {
-                sh "echo ${DOCKER_CREDS_PSW} | docker login -u ${DOCKER_CREDS_USR} --password-stdin"
-                sh "docker push ${IMAGE}:latest"
-            }
-        }
+    withCredentials([usernamePassword(
+        credentialsId: 'dockerhub-creds',
+        usernameVariable: 'DOCKER_USER',
+        passwordVariable: 'DOCKER_PASS'
+    )]) {
+        sh '''
+            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+            docker push 24p1245/weather-app1:latest
+        '''
+    }
+}
+
+
 
         stage('Deploy to EC2') {
             steps {
                  // Example: using scp & ssh to copy and run on EC2
                 sh '''
-                scp -i Weather-App1-Pem-Key.pem docker-compose.yml ubuntu@:51.20.76.196 /home/ubuntu/
-                ssh -i Weather-App1-Pem-Key.pem ubuntu@51.20.76.196 "docker pull $IMAGE && docker-compose up -d"
+                scp -i Weather-App1-Pem-Key.pem docker-compose.yml ubuntu@:13.61.143.74   /home/ubuntu/
+                ssh -i Weather-App1-Pem-Key.pem ubuntu@13.61.143.74   "docker pull $IMAGE && docker-compose up -d"
                 '''
             }
         }
