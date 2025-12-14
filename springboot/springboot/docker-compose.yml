@@ -1,9 +1,8 @@
-version: "3.8"
+version: "3.9"
 
 services:
-  weather-app:
+  app:
     image: ssk2003/weather-app1:latest
     container_name: weather-app
     ports:
       - "8081:8081"
-    restart: always
