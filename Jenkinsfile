@@ -55,7 +55,7 @@ pipeline {
         scp -o StrictHostKeyChecking=no \
         -i /var/lib/jenkins/weather-jenkins-key \
         ${WORKSPACE}/springboot/springboot/docker-compose.yml \
-        ubuntu@13.48.178.190  :/home/ubuntu/
+        ubuntu@13.48.178.190:/home/ubuntu/
 
         ssh -o StrictHostKeyChecking=no \
         -i /var/lib/jenkins/weather-jenkins-key \
