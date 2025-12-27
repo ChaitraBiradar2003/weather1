@@ -3,96 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather App - Easy Tutorials</title>
-    <link rel="stylesheet"href="style.css">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .forecast-day {
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            margin: 5px;
+            border-radius: 10px;
+            display: inline-block;
+            width: 120px;
+            font-size: 14px;
+        }
+        .air-quality {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+        }
+        #locationBtn {
+            margin-top: 10px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
 </head>
+
 <body>
-    <div class="card">
-        <div class="search">
-            
-            <input type="text" placeholder="Enter city name for here"
-            spellcheck="false">
-            <button><img src="images/searching.jpg" width="20" height="20"></button>
-        </div>
-        <div class="error">
-            <p>Invalid city name</p>
-        </div>
-        <div class="weather">
-            <img src="images/rain.png" width="80" height="100" class="weather-icon">
-            <h1 class="temp">22 °c</h1>
-            <h2 class="city">New york</h2>
-        
-            <div class="details">
-                <div class="col">
-                    <img src="images/humidity.jpg" width="60" height="80">
-                    <div>
-                        <p class="humidity">50%</p>
-                        <p>Humidity</p>
-                    </div>
+<div class="card">
+    <div class="search">
+        <input type="text" placeholder="Enter city name" spellcheck="false">
+        <button><img src="images/searching.jpg" width="20"></button>
+    </div>
+
+    <button id="locationBtn">Use Current Location</button>
+
+    <div class="error">
+        <p>Invalid city name</p>
+    </div>
+
+    <div class="weather">
+        <img src="images/rain.png" class="weather-icon" width="80">
+        <h1 class="temp">-- °C</h1>
+        <h2 class="city">City</h2>
+
+        <div class="details">
+            <div class="col">
+                <img src="images/humidity.jpg" width="40">
+                <div>
+                    <p class="humidity">--%</p>
+                    <p>Humidity</p>
                 </div>
-                <div class="col">
-                    <img src="images/wind.png" width="60" height="80">
-                    <div>
-                        <p class="wind">15 km/h</p>
-                        <p>Wind Speed</p>
-                    </div>
+            </div>
+            <div class="col">
+                <img src="images/wind.png" width="40">
+                <div>
+                    <p class="wind">-- km/h</p>
+                    <p>Wind Speed</p>
                 </div>
             </div>
         </div>
     </div>
-    <script>
-        const apiKey = "03fd4aba89ca8fe12eb401403b01447b";
-        const apiUrl = "https://api.openweathermap.org/data/2.5/weather?units=metric&q=";
 
-        const searchBox = document.querySelector(".search input");
-        const searchBtn = document.querySelector(".search button");
-        const weatherIcon = document.querySelector(".weather-icon");
-        
-        async function checkWeather(city){
-            const response = await fetch(apiUrl + city + `&appid=${apiKey}`);
+    <!-- 5 Day Forecast -->
+    <div class="forecast">
+        <h3>5-Day Forecast</h3>
+        <div id="forecastContainer"></div>
+    </div>
 
-            if(response.status ==404){
-                document.querySelector(".error").style.display = "block";
-                document.querySelector(".weather").style.display = "none";
-            }else{
-                var data = await response.json();
+    <!-- Air Quality -->
+    <div class="air-quality">
+        <h3>Air Quality</h3>
+        <p id="aqiValue">AQI: --</p>
+        <p id="aqiCondition">Condition: --</p>
+        <p id="aqiSuggestion">Suggestion: --</p>
+    </div>
+</div>
 
-            document.querySelector(".city").innerHTML = data.name;
-            document.querySelector(".temp").innerHTML =  Math.round(data.main.temp) + "°c";
-            document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
-            document.querySelector(".wind").innerHTML = data.wind.speed + " km/h";
+<script>
+/* ================= CONFIG ================= */
+const apiKey = "03fd4aba89ca8fe12eb401403b01447b";
+const weatherUrl = "https://api.openweathermap.org/data/2.5/weather?units=metric&q=";
+const forecastUrl = "https://api.openweathermap.org/data/2.5/forecast?units=metric&q=";
 
-            if(data.weather[0].main == "Clouds"){
-                weatherIcon.src = "images/clouds.png";
-            }
-            else if(data.weather[0].main == "Clear"){
-                weatherIcon.src = "images/clear.png";
-            }
-            else if(data.weather[0].main == "Rain"){
-                weatherIcon.src = "images/rain.png";
-            }
-            else if(data.weather[0].main == "Drizzle"){
-                weatherIcon.src = "images/drizzle.png";
-            }
-            else if(data.weather[0].main == "Mist"){
-                weatherIcon.src = "images/mist.png";
-            }
+/* ================= ELEMENTS ================= */
+const searchBox = document.querySelector(".search input");
+const searchBtn = document.querySelector(".search button");
+const weatherIcon = document.querySelector(".weather-icon");
+const errorBox = document.querySelector(".error");
+const weatherBox = document.querySelector(".weather");
+const forecastContainer = document.getElementById("forecastContainer");
+const locationBtn = document.getElementById("locationBtn");
 
-            document.querySelector(".weather").style.display = "block";
-            document.querySelector(".error").style.display = "none";
-            }
-            
-            
+/* ================= CITY WEATHER ================= */
+async function checkWeather(city) {
+    if (city === "") {
+        alert("Please enter a city name");
+        return;
+    }
+
+    try {
+        const response = await fetch(weatherUrl + city + `&appid=${apiKey}`);
+        if (response.status === 404) {
+            errorBox.style.display = "block";
+            weatherBox.style.display = "none";
+            return;
         }
 
-        searchBtn.addEventListener("click",()=>{
-            checkWeather(searchBox.value);
+        const data = await response.json();
+        updateWeatherUI(data);
+        getFiveDayForecast(city);
+        getAirQuality(data.coord.lat, data.coord.lon);
 
-        })
-            
-        
+    } catch {
+        alert("Network error");
+    }
+}
 
+/* ================= UPDATE UI ================= */
+function updateWeatherUI(data) {
+    document.querySelector(".city").innerHTML = data.name;
+    document.querySelector(".temp").innerHTML = Math.round(data.main.temp) + "°C";
+    document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
+    document.querySelector(".wind").innerHTML = data.wind.speed + " km/h";
 
-    </script>
+    const condition = data.weather[0].main;
+    if (condition === "Clouds") weatherIcon.src = "images/clouds.png";
+    else if (condition === "Clear") weatherIcon.src = "images/clear.png";
+    else if (condition === "Rain") weatherIcon.src = "images/rain.png";
+    else if (condition === "Drizzle") weatherIcon.src = "images/drizzle.png";
+    else if (condition === "Mist") weatherIcon.src = "images/mist.png";
+
+    weatherBox.style.display = "block";
+    errorBox.style.display = "none";
+}
+
+/* ================= 5 DAY FORECAST ================= */
+async function getFiveDayForecast(city) {
+    const response = await fetch(forecastUrl + city + `&appid=${apiKey}`);
+    const data = await response.json();
+    forecastContainer.innerHTML = "";
+
+    for (let i = 0; i < data.list.length; i += 8) {
+        const day = data.list[i];
+        const date = new Date(day.dt_txt).toDateString();
+
+        forecastContainer.innerHTML += `
+            <div class="forecast-day">
+                <p>${date}</p>
+                <p>${Math.round(day.main.temp)}°C</p>
+                <p>${day.weather[0].main}</p>
+            </div>
+        `;
+    }
+}
+
+/* ================= AIR QUALITY ================= */
+async function getAirQuality(lat, lon) {
+    const response = await fetch(
+        `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`
+    );
+    const data = await response.json();
+    const aqi = data.list[0].main.aqi;
+
+    let condition = "", suggestion = "";
+
+    if (aqi === 1) {
+        condition = "Good 😊";
+        suggestion = "Perfect for outdoor activities.";
+    } else if (aqi === 2) {
+        condition = "Fair 🙂";
+        suggestion = "Sensitive people should be careful.";
+    } else if (aqi === 3) {
+        condition = "Moderate 😐";
+        suggestion = "Limit outdoor exercise.";
+    } else if (aqi === 4) {
+        condition = "Poor 😷";
+        suggestion = "Avoid outdoor activities.";
+    } else {
+        condition = "Very Poor ☠️";
+        suggestion = "Stay indoors.";
+    }
+
+    document.getElementById("aqiValue").innerHTML = "AQI Level: " + aqi;
+    document.getElementById("aqiCondition").innerHTML = "Condition: " + condition;
+    document.getElementById("aqiSuggestion").innerHTML = "Suggestion: " + suggestion;
+}
+
+/* ================= CURRENT LOCATION ================= */
+locationBtn.addEventListener("click", () => {
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        const res = await fetch(
+            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
+        );
+        const data = await res.json();
+
+        updateWeatherUI(data);
+        getFiveDayForecast(data.name);
+        getAirQuality(lat, lon);
+    });
+});
+
+/* ================= EVENTS ================= */
+searchBtn.addEventListener("click", () => checkWeather(searchBox.value));
+searchBox.addEventListener("keyup", e => {
+    if (e.key === "Enter") checkWeather(searchBox.value);
+});
+</script>
 </body>
 </html>
