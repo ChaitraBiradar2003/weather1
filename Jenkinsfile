@@ -55,11 +55,11 @@ pipeline {
         scp -o StrictHostKeyChecking=no \
         -i /var/lib/jenkins/weather-jenkins-key \
         ${WORKSPACE}/springboot/springboot/docker-compose.yml \
-        ubuntu@13.48.178.190:/home/ubuntu/
+        ubuntu@13.61.195.242:/home/ubuntu/
 
         ssh -o StrictHostKeyChecking=no \
         -i /var/lib/jenkins/weather-jenkins-key \
-        ubuntu@13.48.178.190   "
+        ubuntu@13.61.195.242"
             docker pull ssk2003/weather-app1:latest
             docker compose down || true
             docker compose up -d
