@@ -1,129 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather App</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #1e1e1e;
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            padding: 20px;
-        }
-        .card {
-            background: linear-gradient(135deg, #00ffcc, #3366ff);
-            padding: 20px;
-            border-radius: 20px;
-            width: 320px;
-        }
-        .search {
-            display: flex;
-            margin-bottom: 10px;
-        }
-        .search input {
-            flex: 1;
-            padding: 8px 12px;
-            border-radius: 20px 0 0 20px;
-            border: none;
-        }
-        .search button {
-            border: none;
-            border-radius: 0 20px 20px 0;
-            cursor: pointer;
-            background: #fff;
-        }
-        .weather {
-            display: none;
-            text-align: center;
-            margin-top: 20px;
-        }
-        .weather-icon {
-            width: 80px;
-        }
-        .details {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 15px;
-        }
-        .col p {
-            margin: 5px 0;
-        }
-        .forecast-day {
-            background: rgba(255,255,255,0.2);
-            padding: 10px;
-            margin: 5px;
-            border-radius: 10px;
-            display: inline-block;
-            width: 120px;
-            font-size: 14px;
-            text-align: center;
-        }
-        .air-quality {
-            margin-top: 20px;
-            padding: 15px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 10px;
-        }
-        .error {
-            display: none;
-            text-align: center;
-            color: #ff6666;
-            margin-top: 10px;
-        }
-        #locationBtn {
-            margin-top: 10px;
-            padding: 8px 15px;
-            border-radius: 20px;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-            background: #fff;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather Dashboard</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(to right, #1e3c72, #2a5298);
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 600px;
+        width: 100%;
+        background: rgba(0,0,0,0.3);
+        padding: 20px;
+        border-radius: 20px;
+    }
+
+    .search-container {
+        display: flex;
+        margin-bottom: 20px;
+    }
+
+    .search-container input {
+        flex: 1;
+        padding: 12px 15px;
+        font-size: 16px;
+        border: none;
+        border-radius: 25px 0 0 25px;
+    }
+
+    .search-container button {
+        padding: 12px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 0 25px 25px 0;
+        cursor: pointer;
+        background: #fff;
+        color: #000;
+    }
+
+    #locationBtn {
+        margin-top: 10px;
+        padding: 10px;
+        width: 100%;
+        font-weight: bold;
+        background: #fff;
+        color: #000;
+        border-radius: 25px;
+        cursor: pointer;
+    }
+
+    .error {
+        display: none;
+        text-align: center;
+        margin-top: 10px;
+        color: #ff6666;
+        font-weight: bold;
+    }
+
+    /* Current Weather */
+    .current-weather {
+        text-align: center;
+        margin-bottom: 20px;
+        background: rgba(255,255,255,0.1);
+        padding: 20px;
+        border-radius: 20px;
+    }
+
+    .current-weather img {
+        width: 100px;
+    }
+
+    .current-weather h1 {
+        font-size: 48px;
+        margin: 10px 0;
+    }
+
+    .current-weather h2 {
+        font-size: 28px;
+        margin: 5px 0;
+    }
+
+    .current-weather .details {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-top: 10px;
+    }
+
+    /* Forecast */
+    .forecast {
+        margin-bottom: 20px;
+        background: rgba(255,255,255,0.1);
+        padding: 15px;
+        border-radius: 20px;
+    }
+
+    .forecast h3 {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    .forecast-day {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        margin: 5px 0;
+        background: rgba(255,255,255,0.2);
+        border-radius: 15px;
+    }
+
+    .forecast-day img {
+        width: 50px;
+        margin-right: 10px;
+    }
+
+    .forecast-day p {
+        margin: 0 5px;
+    }
+
+    /* Air Quality */
+    .air-quality {
+        background: rgba(255,255,255,0.1);
+        padding: 15px;
+        border-radius: 20px;
+        text-align: center;
+    }
+
+    .air-quality p {
+        margin: 5px 0;
+    }
+
+    /* AQI Colors */
+    .good { color: #00ff00; }
+    .fair { color: #ffff00; }
+    .moderate { color: #ffa500; }
+    .poor { color: #ff4500; }
+    .very-poor { color: #ff0000; }
+
+</style>
 </head>
 <body>
-<div class="card">
-    <!-- Search -->
-    <div class="search">
-        <input type="text" id="searchBox" placeholder="Enter city or city,country" spellcheck="false">
-        <button id="searchBtn"><img src="images/searching.jpg" width="20"></button>
-    </div>
+<div class="container">
 
-    <!-- Current Location -->
+    <!-- Search -->
+    <div class="search-container">
+        <input type="text" id="searchBox" placeholder="Enter city or city,country">
+        <button id="searchBtn">Search</button>
+    </div>
     <button id="locationBtn">Use Current Location</button>
 
-    <!-- Error -->
     <div class="error">
         <p>You Entered Invalid city name</p>
     </div>
 
     <!-- Current Weather -->
-    <div class="weather">
-        <img src="images/clear.png" class="weather-icon">
-        <h1 class="temp">-- °C</h1>
+    <div class="current-weather">
+        <img src="" class="weather-icon" alt="Weather Icon">
         <h2 class="city">City</h2>
+        <h1 class="temp">-- °C</h1>
         <div class="details">
-            <div class="col">
-                <img src="images/humidity.jpg" width="40">
-                <div>
-                    <p class="humidity">--%</p>
-                    <p>Humidity</p>
-                </div>
+            <div>
+                <p class="humidity">--%</p>
+                <p>Humidity</p>
             </div>
-            <div class="col">
-                <img src="images/wind.png" width="40">
-                <div>
-                    <p class="wind">-- km/h</p>
-                    <p>Wind Speed</p>
-                </div>
+            <div>
+                <p class="wind">-- km/h</p>
+                <p>Wind Speed</p>
             </div>
         </div>
     </div>
 
-    <!-- 5-Day Forecast -->
+    <!-- Forecast -->
     <div class="forecast">
         <h3>5-Day Forecast</h3>
         <div id="forecastContainer"></div>
@@ -136,15 +191,14 @@
         <p id="aqiCondition">Condition: --</p>
         <p id="aqiSuggestion">Suggestion: --</p>
     </div>
+
 </div>
 
 <script>
 const apiKey = "03fd4aba89ca8fe12eb401403b01447b";
-
-// Elements
 const searchBox = document.getElementById("searchBox");
 const searchBtn = document.getElementById("searchBtn");
-const weatherBox = document.querySelector(".weather");
+const weatherBox = document.querySelector(".current-weather");
 const weatherIcon = document.querySelector(".weather-icon");
 const forecastContainer = document.getElementById("forecastContainer");
 const errorBox = document.querySelector(".error");
@@ -177,14 +231,9 @@ function updateWeatherUI(data) {
     document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
     document.querySelector(".wind").innerHTML = data.wind.speed + " km/h";
 
-    let condition = data.weather[0].main;
-    let icon = "clear.png";
-    if(condition === "Clouds") icon="clouds.png";
-    else if(condition === "Rain") icon="rain.png";
-    else if(condition === "Drizzle") icon="drizzle.png";
-    else if(condition === "Mist") icon="mist.png";
-
-    weatherIcon.src = "images/" + icon;
+    const iconCode = data.weather[0].icon;
+    weatherIcon.src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+    weatherIcon.alt = data.weather[0].description;
 
     weatherBox.style.display = "block";
     errorBox.style.display = "none";
@@ -203,24 +252,17 @@ async function getFiveDayForecast(lat, lon){
         const date = new Date(day.dt_txt).toDateString();
         if(!days.has(date)){
             days.add(date);
-
-            let main = day.weather[0].main;
-            let icon = "clear.png";
-            if(main === "Clouds") icon="clouds.png";
-            else if(main === "Rain") icon="rain.png";
-            else if(main === "Drizzle") icon="drizzle.png";
-            else if(main === "Mist") icon="mist.png";
-
+            const iconCode = day.weather[0].icon;
             forecastContainer.innerHTML += `
                 <div class="forecast-day">
                     <p>${date}</p>
-                    <img src="images/${icon}" width="30">
+                    <img src="https://openweathermap.org/img/wn/${iconCode}@2x.png" width="50" alt="${day.weather[0].description}">
                     <p>${Math.round(day.main.temp)}°C</p>
-                    <p>${main}</p>
+                    <p>${day.weather[0].main}</p>
                 </div>
             `;
         }
-        if(days.size===5) break; // only 5 days
+        if(days.size === 5) break;
     }
 }
 
@@ -230,15 +272,15 @@ async function getAirQuality(lat, lon){
     const data = await response.json();
     const aqi = data.list[0].main.aqi;
 
-    let condition="", suggestion="";
-    if(aqi===1){condition="Good 😊"; suggestion="Perfect for outdoor activities.";}
-    else if(aqi===2){condition="Fair 🙂"; suggestion="Sensitive people should be careful.";}
-    else if(aqi===3){condition="Moderate 😐"; suggestion="Limit outdoor exercise.";}
-    else if(aqi===4){condition="Poor 😷"; suggestion="Avoid outdoor activities.";}
-    else{condition="Very Poor ☠️"; suggestion="Stay indoors.";}
+    let condition="", suggestion="", colorClass="";
+    if(aqi===1){condition="Good 😊"; suggestion="Perfect for outdoor activities."; colorClass="good";}
+    else if(aqi===2){condition="Fair 🙂"; suggestion="Sensitive people should be careful."; colorClass="fair";}
+    else if(aqi===3){condition="Moderate 😐"; suggestion="Limit outdoor exercise."; colorClass="moderate";}
+    else if(aqi===4){condition="Poor 😷"; suggestion="Avoid outdoor activities."; colorClass="poor";}
+    else{condition="Very Poor ☠️"; suggestion="Stay indoors."; colorClass="very-poor";}
 
     document.getElementById("aqiValue").innerHTML = "AQI Level: "+aqi;
-    document.getElementById("aqiCondition").innerHTML = "Condition: "+condition;
+    document.getElementById("aqiCondition").innerHTML = "Condition: <span class='"+colorClass+"'>"+condition+"</span>";
     document.getElementById("aqiSuggestion").innerHTML = "Suggestion: "+suggestion;
 }
 
@@ -247,7 +289,6 @@ locationBtn.addEventListener("click", ()=>{
     navigator.geolocation.getCurrentPosition(async (pos)=>{
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
-
         const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`);
         const data = await res.json();
         updateWeatherUI(data);
@@ -262,6 +303,7 @@ searchBox.addEventListener("keyup", e=>{if(e.key==="Enter") checkWeather(searchB
 
 // ================= DEFAULT LOAD =================
 window.addEventListener("load", ()=>checkWeather("Belagavi,IN"));
+
 </script>
 </body>
 </html>
