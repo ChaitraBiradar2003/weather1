@@ -47,25 +47,34 @@ pipeline {
 }
 
 
-    stage('Deploy to EC2') {
-    steps {
-        withCredentials([sshUserPrivateKey(credentialsId: 'weather-key', 
-                                            keyFileVariable: 'KEY_FILE', 
-                                            usernameVariable: 'USER')]) {
-            sh '''
-                # Copy docker-compose.yml to EC2
-                scp -o StrictHostKeyChecking=no -i $KEY_FILE ${WORKSPACE}/springboot/springboot/docker-compose.yml $USER@13.48.5.190:/home/ubuntu/
+            stage('Deploy to EC2') {
+            steps {
+                withCredentials([sshUserPrivateKey(
+                    credentialsId: 'weather-key', 
+                    keyFileVariable: 'KEY_FILE', 
+                    usernameVariable: 'USER'
+                )]) {
+                    sh '''
+                        # Copy docker-compose.yml to EC2
+                        scp -o StrictHostKeyChecking=no -i $KEY_FILE ${WORKSPACE}/springboot/springboot/docker-compose.yml $USER@13.48.5.190:/home/ubuntu/
 
-                # SSH into EC2 and run Docker commands
-                ssh -o StrictHostKeyChecking=no -i $KEY_FILE $USER@13.48.5.190 << EOF
-                    docker pull ssk2003/weather-app1:latest
-                    docker compose down || true
-                    docker compose up -d
+                        # SSH into EC2 and deploy safely
+                        ssh -o StrictHostKeyChecking=no -i $KEY_FILE $USER@13.48.5.190 << EOF
+                            docker pull $IMAGE:latest
+
+                            # Stop and remove existing containers
+                            docker compose down || true
+
+                            # Remove any leftover container named weather-app
+                            docker rm -f weather-app || true
+
+                            # Start fresh
+                            docker compose up -d --force-recreate --remove-orphans
 EOF
-            '''
+                    '''
+                }
+            }
         }
-    }
-}
 
 
 
