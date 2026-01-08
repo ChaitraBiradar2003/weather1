@@ -4,8 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather App</title>
-    <link rel="stylesheet" href="style.css">
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1e1e1e;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: linear-gradient(135deg, #00ffcc, #3366ff);
+            padding: 20px;
+            border-radius: 20px;
+            width: 320px;
+        }
+        .search {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .search input {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 20px 0 0 20px;
+            border: none;
+        }
+        .search button {
+            border: none;
+            border-radius: 0 20px 20px 0;
+            cursor: pointer;
+            background: #fff;
+        }
+        .weather {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .weather-icon {
+            width: 80px;
+        }
+        .details {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+        }
+        .col p {
+            margin: 5px 0;
+        }
         .forecast-day {
             background: rgba(255,255,255,0.2);
             padding: 10px;
@@ -14,6 +59,7 @@
             display: inline-block;
             width: 120px;
             font-size: 14px;
+            text-align: center;
         }
         .air-quality {
             margin-top: 20px;
@@ -21,34 +67,44 @@
             background: rgba(255,255,255,0.2);
             border-radius: 10px;
         }
+        .error {
+            display: none;
+            text-align: center;
+            color: #ff6666;
+            margin-top: 10px;
+        }
         #locationBtn {
             margin-top: 10px;
             padding: 8px 15px;
             border-radius: 20px;
             border: none;
             cursor: pointer;
+            width: 100%;
+            background: #fff;
         }
     </style>
 </head>
-
 <body>
 <div class="card">
+    <!-- Search -->
     <div class="search">
-        <input type="text" placeholder="Enter city name" spellcheck="false">
-        <button><img src="images/searching.jpg" width="20"></button>
+        <input type="text" id="searchBox" placeholder="Enter city or city,country" spellcheck="false">
+        <button id="searchBtn"><img src="images/searching.jpg" width="20"></button>
     </div>
 
+    <!-- Current Location -->
     <button id="locationBtn">Use Current Location</button>
 
+    <!-- Error -->
     <div class="error">
         <p>You Entered Invalid city name</p>
     </div>
 
+    <!-- Current Weather -->
     <div class="weather">
-        <img src="images/rain.png" class="weather-icon" width="80">
+        <img src="images/clear.png" class="weather-icon">
         <h1 class="temp">-- °C</h1>
         <h2 class="city">City</h2>
-
         <div class="details">
             <div class="col">
                 <img src="images/humidity.jpg" width="40">
@@ -67,7 +123,7 @@
         </div>
     </div>
 
-    <!-- 5 Day Forecast -->
+    <!-- 5-Day Forecast -->
     <div class="forecast">
         <h3>5-Day Forecast</h3>
         <div id="forecastContainer"></div>
@@ -83,137 +139,129 @@
 </div>
 
 <script>
-/* ================= CONFIG ================= */
 const apiKey = "03fd4aba89ca8fe12eb401403b01447b";
-const weatherUrl = "https://api.openweathermap.org/data/2.5/weather?units=metric&q=";
-const forecastUrl = "https://api.openweathermap.org/data/2.5/forecast?units=metric&q=";
 
-/* ================= ELEMENTS ================= */
-const searchBox = document.querySelector(".search input");
-const searchBtn = document.querySelector(".search button");
-const weatherIcon = document.querySelector(".weather-icon");
-const errorBox = document.querySelector(".error");
+// Elements
+const searchBox = document.getElementById("searchBox");
+const searchBtn = document.getElementById("searchBtn");
 const weatherBox = document.querySelector(".weather");
+const weatherIcon = document.querySelector(".weather-icon");
 const forecastContainer = document.getElementById("forecastContainer");
+const errorBox = document.querySelector(".error");
 const locationBtn = document.getElementById("locationBtn");
 
-/* ================= CITY WEATHER ================= */
+// ================= CITY WEATHER =================
 async function checkWeather(city) {
-    if (city === "") {
-        alert("Please enter a city name");
-        return;
-    }
+    if(city === "") { alert("Please enter a city"); return; }
 
     try {
-        const response = await fetch(weatherUrl + city + `&appid=${apiKey}`);
-        if (response.status === 404) {
-            errorBox.style.display = "block";
-            weatherBox.style.display = "none";
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?units=metric&q=${city}&appid=${apiKey}`);
+        if(response.status === 404) { 
+            errorBox.style.display = "block"; 
+            weatherBox.style.display = "none"; 
             return;
         }
-
         const data = await response.json();
         updateWeatherUI(data);
-        getFiveDayForecast(city);
+        getFiveDayForecast(data.coord.lat, data.coord.lon);
         getAirQuality(data.coord.lat, data.coord.lon);
-
     } catch {
         alert("Network error");
     }
 }
 
-/* ================= UPDATE UI ================= */
+// ================= UPDATE UI =================
 function updateWeatherUI(data) {
     document.querySelector(".city").innerHTML = data.name;
     document.querySelector(".temp").innerHTML = Math.round(data.main.temp) + "°C";
     document.querySelector(".humidity").innerHTML = data.main.humidity + "%";
     document.querySelector(".wind").innerHTML = data.wind.speed + " km/h";
 
-    const condition = data.weather[0].main;
-    if (condition === "Clouds") weatherIcon.src = "images/clouds.png";
-    else if (condition === "Clear") weatherIcon.src = "images/clear.png";
-    else if (condition === "Rain") weatherIcon.src = "images/rain.png";
-    else if (condition === "Drizzle") weatherIcon.src = "images/drizzle.png";
-    else if (condition === "Mist") weatherIcon.src = "images/mist.png";
+    let condition = data.weather[0].main;
+    let icon = "clear.png";
+    if(condition === "Clouds") icon="clouds.png";
+    else if(condition === "Rain") icon="rain.png";
+    else if(condition === "Drizzle") icon="drizzle.png";
+    else if(condition === "Mist") icon="mist.png";
+
+    weatherIcon.src = "images/" + icon;
 
     weatherBox.style.display = "block";
     errorBox.style.display = "none";
 }
 
-/* ================= 5 DAY FORECAST ================= */
-async function getFiveDayForecast(city) {
-    const response = await fetch(forecastUrl + city + `&appid=${apiKey}`);
+// ================= 5-DAY FORECAST =================
+async function getFiveDayForecast(lat, lon){
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`);
     const data = await response.json();
+    if(!data.list) return;
+
     forecastContainer.innerHTML = "";
+    const days = new Set();
 
-    for (let i = 0; i < data.list.length; i += 8) {
-        const day = data.list[i];
+    for(let day of data.list){
         const date = new Date(day.dt_txt).toDateString();
+        if(!days.has(date)){
+            days.add(date);
 
-        forecastContainer.innerHTML += `
-            <div class="forecast-day">
-                <p>${date}</p>
-                <p>${Math.round(day.main.temp)}°C</p>
-                <p>${day.weather[0].main}</p>
-            </div>
-        `;
+            let main = day.weather[0].main;
+            let icon = "clear.png";
+            if(main === "Clouds") icon="clouds.png";
+            else if(main === "Rain") icon="rain.png";
+            else if(main === "Drizzle") icon="drizzle.png";
+            else if(main === "Mist") icon="mist.png";
+
+            forecastContainer.innerHTML += `
+                <div class="forecast-day">
+                    <p>${date}</p>
+                    <img src="images/${icon}" width="30">
+                    <p>${Math.round(day.main.temp)}°C</p>
+                    <p>${main}</p>
+                </div>
+            `;
+        }
+        if(days.size===5) break; // only 5 days
     }
 }
 
-/* ================= AIR QUALITY ================= */
-async function getAirQuality(lat, lon) {
-    const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`
-    );
+// ================= AIR QUALITY =================
+async function getAirQuality(lat, lon){
+    const response = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`);
     const data = await response.json();
     const aqi = data.list[0].main.aqi;
 
-    let condition = "", suggestion = "";
+    let condition="", suggestion="";
+    if(aqi===1){condition="Good 😊"; suggestion="Perfect for outdoor activities.";}
+    else if(aqi===2){condition="Fair 🙂"; suggestion="Sensitive people should be careful.";}
+    else if(aqi===3){condition="Moderate 😐"; suggestion="Limit outdoor exercise.";}
+    else if(aqi===4){condition="Poor 😷"; suggestion="Avoid outdoor activities.";}
+    else{condition="Very Poor ☠️"; suggestion="Stay indoors.";}
 
-    if (aqi === 1) {
-        condition = "Good 😊";
-        suggestion = "Perfect for outdoor activities.";
-    } else if (aqi === 2) {
-        condition = "Fair 🙂";
-        suggestion = "Sensitive people should be careful.";
-    } else if (aqi === 3) {
-        condition = "Moderate 😐";
-        suggestion = "Limit outdoor exercise.";
-    } else if (aqi === 4) {
-        condition = "Poor 😷";
-        suggestion = "Avoid outdoor activities.";
-    } else {
-        condition = "Very Poor ☠️";
-        suggestion = "Stay indoors.";
-    }
-
-    document.getElementById("aqiValue").innerHTML = "AQI Level: " + aqi;
-    document.getElementById("aqiCondition").innerHTML = "Condition: " + condition;
-    document.getElementById("aqiSuggestion").innerHTML = "Suggestion: " + suggestion;
+    document.getElementById("aqiValue").innerHTML = "AQI Level: "+aqi;
+    document.getElementById("aqiCondition").innerHTML = "Condition: "+condition;
+    document.getElementById("aqiSuggestion").innerHTML = "Suggestion: "+suggestion;
 }
 
-/* ================= CURRENT LOCATION ================= */
-locationBtn.addEventListener("click", () => {
-    navigator.geolocation.getCurrentPosition(async (pos) => {
+// ================= CURRENT LOCATION =================
+locationBtn.addEventListener("click", ()=>{
+    navigator.geolocation.getCurrentPosition(async (pos)=>{
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
 
-        const res = await fetch(
-            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`
-        );
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`);
         const data = await res.json();
-
         updateWeatherUI(data);
-        getFiveDayForecast(data.name);
+        getFiveDayForecast(lat, lon);
         getAirQuality(lat, lon);
     });
 });
 
-/* ================= EVENTS ================= */
-searchBtn.addEventListener("click", () => checkWeather(searchBox.value));
-searchBox.addEventListener("keyup", e => {
-    if (e.key === "Enter") checkWeather(searchBox.value);
-});
+// ================= EVENTS =================
+searchBtn.addEventListener("click", ()=>checkWeather(searchBox.value));
+searchBox.addEventListener("keyup", e=>{if(e.key==="Enter") checkWeather(searchBox.value);});
+
+// ================= DEFAULT LOAD =================
+window.addEventListener("load", ()=>checkWeather("Belagavi,IN"));
 </script>
 </body>
 </html>
