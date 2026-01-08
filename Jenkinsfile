@@ -47,7 +47,7 @@ pipeline {
 }
 
 
-            stage('Deploy to EC2') {
+           stage('Deploy to EC2') {
     steps {
         sh '''
             # Copy docker-compose.yml to EC2
@@ -56,11 +56,21 @@ pipeline {
             # SSH into EC2 and deploy
             ssh -o StrictHostKeyChecking=no -i /home/jenkins/.ssh/weather-key.pem ubuntu@13.48.5.190 << EOF
                 set -e
+
+                echo "Stopping old containers..."
                 docker compose down || true
                 docker rm -f weather-app || true
-                fuser -k 8080/tcp || true
+
+                echo "Killing any process using port 8080..."
+                sudo fuser -k 8080/tcp || true
+
+                echo "Pulling latest Docker image..."
                 docker pull ssk2003/weather-app1:latest
+
+                echo "Starting container..."
                 docker compose up -d --force-recreate --remove-orphans
+
+                echo "Deployment finished successfully!"
 EOF
         '''
     }
