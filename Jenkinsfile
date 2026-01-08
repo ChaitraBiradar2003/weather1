@@ -64,31 +64,27 @@ pipeline {
                     "${WORKSPACE}/springboot/springboot/docker-compose.yml" \
                     "$EC2_USER@13.48.5.190:/home/ubuntu/"
 
-                # SSH and deploy
-                ssh -o StrictHostKeyChecking=no -i "$Key" "$EC2_USER@13.48.5.190" 'bash -s' << 'EOF'
-set -e
+                ssh -o StrictHostKeyChecking=no -tt -i "$Key" $EC2_USER@13.48.5.190 << 'EOF'
+            set -e
 
-echo "Freeing port 8080..."
-sudo fuser -k 8080/tcp || true
+            echo "Freeing port 8080..."
+            sudo fuser -k 8080/tcp || true
 
-echo "Stopping old containers..."
-docker compose down || true
-docker stop $(docker ps -q) || true
-docker rm $(docker ps -aq) || true
+            echo "Stopping old containers..."
+            docker compose down || true
+            docker stop weather-app || true
+            docker rm weather-app || true
 
-echo "Cleaning unused resources..."
-docker system prune -f || true
+            echo "Pulling latest image..."
+            docker pull ssk2003/weather-app1:latest
 
-echo "Pulling latest image..."
-docker pull ssk2003/weather-app1:latest
+            echo "Starting containers..."
+            docker compose up -d
 
-echo "Starting application..."
-cd /home/ubuntu
-docker compose up -d --force-recreate --remove-orphans
-
-echo "DEPLOYMENT SUCCESS"
-EOF
+            echo "Deployment successful"
+            EOF
             '''
+
         }
     }
 }
