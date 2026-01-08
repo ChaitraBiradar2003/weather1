@@ -51,7 +51,7 @@ pipeline {
     steps {
         withCredentials([sshUserPrivateKey(
             credentialsId: 'weather-key',  // ID from Step 1
-            keyFileVariable: 'C:\Users\mrvis\weather\weather-jenkins-key1.pem',   // temporary variable pointing to key file
+            keyFileVariable: 'Key',   // temporary variable pointing to key file
             usernameVariable: 'ubuntu'       // temporary variable pointing to username
         )]) {
             sh '''
