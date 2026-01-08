@@ -57,35 +57,36 @@ stage('Deploy to EC2') {
             )
         ]) {
             sh '''#!/bin/bash
-            set -eux
+set -eux
 
-            EC2_IP="13.48.5.190"
-            IMAGE="ssk2003/weather-app1:latest"
-            APP_NAME="weather-app"
+EC2_IP="13.48.5.190"
+IMAGE="ssk2003/weather-app1:latest"
+APP_NAME="weather-app"
 
-            echo "Copying docker-compose.yml to EC2..."
-            scp -o StrictHostKeyChecking=no -i "$KEY" \
-              "$WORKSPACE/springboot/springboot/docker-compose.yml" \
-              "$EC2_USER@$EC2_IP:/home/ubuntu/"
+echo "Copying docker-compose.yml to EC2..."
+scp -o StrictHostKeyChecking=no -i "$KEY" \
+"$WORKSPACE/springboot/springboot/docker-compose.yml" \
+"$EC2_USER@$EC2_IP:/home/ubuntu/"
 
-            echo "Deploying on EC2..."
-            ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" << EOF
-            set -eux
+echo "Deploying on EC2..."
+ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" <<EOF
+set -eux
 
-            sudo fuser -k 8080/tcp || true
+sudo fuser -k 8080/tcp || true
 
-            docker compose down || true
-            docker rm -f ${APP_NAME} || true
+docker compose down || true
+docker rm -f ${APP_NAME} || true
 
-            docker pull ${IMAGE}
-            docker compose up -d --force-recreate
+docker pull ${IMAGE}
+docker compose up -d --force-recreate
 
-            echo "Deployment successful"
-            EOF
-            '''
+echo "Deployment successful"
+EOF
+'''
         }
     }
 }
+
 
 
 
