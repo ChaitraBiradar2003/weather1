@@ -64,7 +64,7 @@ scp -o StrictHostKeyChecking=no \
 "${WORKSPACE}/springboot/springboot/docker-compose.yml" \
 "$EC2_USER@13.48.5.190:/home/ubuntu/"
 
-ssh -o StrictHostKeyChecking=no -tt -i "$Key" $EC2_USER@13.48.5.190 << EOF
+ssh -o StrictHostKeyChecking=no -tt -i "$Key" $EC2_USER@13.48.5.190 << 'EOF'
 set -e
 
 echo "Freeing port 8080..."
