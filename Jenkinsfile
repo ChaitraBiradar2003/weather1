@@ -49,43 +49,45 @@ pipeline {
 
     stage('Deploy to EC2') {
     steps {
-        withCredentials([sshUserPrivateKey(
-            credentialsId: 'weather-key',
-            keyFileVariable: 'Key',
-            usernameVariable: 'EC2_USER'
-        )]) {
-            sh '''#!/bin/bash
-echo "Using key: $Key"
-echo "Using user: $EC2_USER"
+        withCredentials([
+            sshUserPrivateKey(
+                credentialsId: 'weather-key',
+                keyFileVariable: 'KEY',
+                usernameVariable: 'EC2_USER'
+            )
+        ]) {
+            sh '''
+            #!/bin/bash
+            set -euxo pipefail
 
-# Copy docker-compose.yml
-scp -o StrictHostKeyChecking=no \
--i "$Key" \
-"${WORKSPACE}/springboot/springboot/docker-compose.yml" \
-"$EC2_USER@13.48.5.190:/home/ubuntu/"
+            EC2_IP="13.48.5.190"
+            IMAGE="ssk2003/weather-app1:latest"
+            APP_NAME="weather-app"
 
-ssh -o StrictHostKeyChecking=no -tt -i "$Key" $EC2_USER@13.48.5.190 << 'EOF'
-set -e
+            echo "Copying docker-compose.yml to EC2..."
+            scp -o StrictHostKeyChecking=no -i "$KEY" \
+              "$WORKSPACE/springboot/springboot/docker-compose.yml" \
+              "$EC2_USER@$EC2_IP:/home/ubuntu/"
 
-echo "Freeing port 8080..."
-sudo fuser -k 8080/tcp || true
+            echo "Deploying on EC2..."
+            ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" << EOF
+            set -euxo pipefail
 
-echo "Stopping old containers..."
-docker compose down || true
-docker rm -f weather-app || true
+            sudo fuser -k 8080/tcp || true
 
-echo "Pulling latest image..."
-docker pull ssk2003/weather-app1:latest
+            docker compose down || true
+            docker rm -f ${APP_NAME} || true
 
-echo "Starting containers..."
-docker compose up -d --force-recreate
+            docker pull ${IMAGE}
+            docker compose up -d --force-recreate
 
-echo "Deployment successful"
-EOF
+            echo "Deployment successful"
+            EOF
             '''
         }
     }
 }
+
 
 
 
