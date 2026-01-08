@@ -47,7 +47,7 @@ pipeline {
 }
 
 
-    stage('Deploy to EC2') {
+stage('Deploy to EC2') {
     steps {
         withCredentials([
             sshUserPrivateKey(
@@ -56,9 +56,8 @@ pipeline {
                 usernameVariable: 'EC2_USER'
             )
         ]) {
-            sh '''
-            #!/bin/bash
-            set -euxo pipefail
+            sh '''#!/bin/bash
+            set -eux
 
             EC2_IP="13.48.5.190"
             IMAGE="ssk2003/weather-app1:latest"
@@ -71,7 +70,7 @@ pipeline {
 
             echo "Deploying on EC2..."
             ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" << EOF
-            set -euxo pipefail
+            set -eux
 
             sudo fuser -k 8080/tcp || true
 
@@ -87,6 +86,7 @@ pipeline {
         }
     }
 }
+
 
 
 
