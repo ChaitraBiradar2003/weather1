@@ -47,7 +47,7 @@ pipeline {
 }
 
 
-         stage('Deploy to EC2') {
+        stage('Deploy to EC2') {
     steps {
         withCredentials([sshUserPrivateKey(
             credentialsId: 'weather-key',
@@ -65,9 +65,7 @@ pipeline {
                     $EC2_USER@13.48.5.190:/home/ubuntu/
 
                 # SSH into EC2 and deploy
-                ssh -o StrictHostKeyChecking=no \
-                    -i "$Key" \
-                    $EC2_USER@13.48.5.190 << EOF
+                ssh -o StrictHostKeyChecking=no -tt -i "$Key" $EC2_USER@13.48.5.190 << 'EOF'
 set -e
 cd /home/ubuntu
 docker compose down || true
