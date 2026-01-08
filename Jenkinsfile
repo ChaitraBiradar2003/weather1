@@ -54,10 +54,10 @@ pipeline {
                                             usernameVariable: 'USER')]) {
             sh '''
                 # Copy docker-compose.yml to EC2
-                scp -o StrictHostKeyChecking=no -i $KEY_FILE ${WORKSPACE}/springboot/springboot/docker-compose.yml $USER@13.61.195.242:/home/ubuntu/
+                scp -o StrictHostKeyChecking=no -i $KEY_FILE ${WORKSPACE}/springboot/springboot/docker-compose.yml $USER@13.48.5.190:/home/ubuntu/
 
                 # SSH into EC2 and run Docker commands
-                ssh -o StrictHostKeyChecking=no -i $KEY_FILE $USER@13.61.195.242 << 'EOF'
+                ssh -o StrictHostKeyChecking=no -i $KEY_FILE $USER@13.48.5.190 << 'EOF'
                     docker pull ssk2003/weather-app1:latest
                     docker compose down || true
                     docker compose up -d
