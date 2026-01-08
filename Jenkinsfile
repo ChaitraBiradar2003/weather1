@@ -50,27 +50,37 @@ pipeline {
          stage('Deploy to EC2') {
     steps {
         withCredentials([sshUserPrivateKey(
-            credentialsId: 'weather-key',  // ID from Step 1
-            keyFileVariable: 'Key',   // temporary variable pointing to key file
-            usernameVariable: 'ubuntu'       // temporary variable pointing to username
+            credentialsId: 'weather-key',
+            keyFileVariable: 'Key',
+            usernameVariable: 'EC2_USER'
         )]) {
             sh '''
+                echo "Using key: $Key"
+                echo "Using user: $EC2_USER"
+
                 # Copy docker-compose.yml to EC2
-                scp -o StrictHostKeyChecking=no -i $KEY_FILE ${WORKSPACE}/springboot/springboot/docker-compose.yml $USER@13.48.5.190:/home/ubuntu/
+                scp -o StrictHostKeyChecking=no \
+                    -i "$Key" \
+                    ${WORKSPACE}/springboot/springboot/docker-compose.yml \
+                    $EC2_USER@13.48.5.190:/home/ubuntu/
 
                 # SSH into EC2 and deploy
-                ssh -o StrictHostKeyChecking=no -i $KEY_FILE $USER@13.48.5.190 << EOF
-                    set -e
-                    docker compose down || true
-                    docker rm -f weather-app || true
-                    fuser -k 8080/tcp || true
-                    docker pull ssk2003/weather-app1:latest
-                    docker compose up -d --force-recreate --remove-orphans
+                ssh -o StrictHostKeyChecking=no \
+                    -i "$Key" \
+                    $EC2_USER@13.48.5.190 << EOF
+set -e
+cd /home/ubuntu
+docker compose down || true
+docker rm -f weather-app || true
+fuser -k 8080/tcp || true
+docker pull ssk2003/weather-app1:latest
+docker compose up -d --force-recreate --remove-orphans
 EOF
             '''
         }
     }
 }
+
 
 
 
