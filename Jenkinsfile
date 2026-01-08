@@ -49,40 +49,32 @@ pipeline {
 
 stage('Deploy to EC2') {
     steps {
-        withCredentials([
-            sshUserPrivateKey(
-                credentialsId: 'weather-key',
-                keyFileVariable: 'KEY',
-                usernameVariable: 'EC2_USER'
-            )
-        ]) {
-            sh '''#!/bin/bash
-set -eux
+        withCredentials([sshUserPrivateKey(credentialsId: 'weather-key', keyFileVariable: 'KEY', usernameVariable: 'EC2_USER')]) {
+            script {
+                def EC2_IP = "13.48.5.190"
+                def IMAGE = "ssk2003/weather-app1:latest"
+                def APP_NAME = "weather-app"
+                
+                echo "Copying docker-compose.yml to EC2..."
+                sh "scp -o StrictHostKeyChecking=no -i $KEY $WORKSPACE/springboot/springboot/docker-compose.yml $EC2_USER@$EC2_IP:/home/ubuntu/"
 
-EC2_IP="13.48.5.190"
-IMAGE="ssk2003/weather-app1:latest"
-APP_NAME="weather-app"
+                echo "Killing old process on port 8080..."
+                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'sudo fuser -k 8080/tcp || true'"
 
-echo "Copying docker-compose.yml to EC2..."
-scp -o StrictHostKeyChecking=no -i "$KEY" \
-"$WORKSPACE/springboot/springboot/docker-compose.yml" \
-"$EC2_USER@$EC2_IP:/home/ubuntu/"
+                echo "Stopping old containers..."
+                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'docker compose down || true'"
 
-echo "Deploying on EC2..."
-ssh -tt -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" <<EOF
-set -eux
+                echo "Removing old container..."
+                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'docker rm -f $APP_NAME || true'"
 
-sudo fuser -k 8080/tcp || true
+                echo "Pulling new Docker image..."
+                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'docker pull $IMAGE'"
 
-docker compose down || true
-docker rm -f ${APP_NAME} || true
+                echo "Starting container..."
+                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'docker compose up -d --force-recreate'"
 
-docker pull ${IMAGE}
-docker compose up -d --force-recreate
-
-echo "Deployment successful"
-EOF
-'''
+                echo "Deployment successful!"
+            }
         }
     }
 }
