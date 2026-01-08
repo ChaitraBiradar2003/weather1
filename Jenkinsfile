@@ -57,7 +57,7 @@ pipeline {
                 scp -o StrictHostKeyChecking=no -i $KEY_FILE ${WORKSPACE}/springboot/springboot/docker-compose.yml $USER@13.48.5.190:/home/ubuntu/
 
                 # SSH into EC2 and run Docker commands
-                ssh -o StrictHostKeyChecking=no -i $KEY_FILE $USER@13.48.5.190 << 'EOF'
+                ssh -o StrictHostKeyChecking=no -i $KEY_FILE $USER@13.48.5.190 << EOF
                     docker pull ssk2003/weather-app1:latest
                     docker compose down || true
                     docker compose up -d
