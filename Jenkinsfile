@@ -47,7 +47,7 @@ pipeline {
 }
 
 
-      stage('Deploy to EC2') {
+    stage('Deploy to EC2') {
     steps {
         withCredentials([sshUserPrivateKey(
             credentialsId: 'weather-key',
@@ -55,39 +55,38 @@ pipeline {
             usernameVariable: 'EC2_USER'
         )]) {
             sh '''#!/bin/bash
-                echo "Using key: $Key"
-                echo "Using user: $EC2_USER"
+echo "Using key: $Key"
+echo "Using user: $EC2_USER"
 
-                # Copy docker-compose.yml
-                scp -o StrictHostKeyChecking=no \
-                    -i "$Key" \
-                    "${WORKSPACE}/springboot/springboot/docker-compose.yml" \
-                    "$EC2_USER@13.48.5.190:/home/ubuntu/"
+# Copy docker-compose.yml
+scp -o StrictHostKeyChecking=no \
+-i "$Key" \
+"${WORKSPACE}/springboot/springboot/docker-compose.yml" \
+"$EC2_USER@13.48.5.190:/home/ubuntu/"
 
-                ssh -o StrictHostKeyChecking=no -tt -i "$Key" $EC2_USER@13.48.5.190 << 'EOF'
-            set -e
+ssh -o StrictHostKeyChecking=no -tt -i "$Key" $EC2_USER@13.48.5.190 << 'EOF'
+set -e
 
-            echo "Freeing port 8080..."
-            sudo fuser -k 8080/tcp || true
+echo "Freeing port 8080..."
+sudo fuser -k 8080/tcp || true
 
-            echo "Stopping old containers..."
-            docker compose down || true
-            docker stop weather-app || true
-            docker rm weather-app || true
+echo "Stopping old containers..."
+docker compose down || true
+docker rm -f weather-app || true
 
-            echo "Pulling latest image..."
-            docker pull ssk2003/weather-app1:latest
+echo "Pulling latest image..."
+docker pull ssk2003/weather-app1:latest
 
-            echo "Starting containers..."
-            docker compose up -d
+echo "Starting containers..."
+docker compose up -d --force-recreate
 
-            echo "Deployment successful"
-            EOF
+echo "Deployment successful"
+EOF
             '''
-
         }
     }
 }
+
 
 
 
