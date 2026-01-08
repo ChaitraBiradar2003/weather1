@@ -47,32 +47,28 @@ pipeline {
 }
 
 
-           stage('Deploy to EC2') {
+         stage('Deploy to EC2') {
     steps {
-        sh '''
-            # Copy docker-compose.yml to EC2
-            scp -o StrictHostKeyChecking=no -i /home/jenkins/.ssh/weather-key.pem ${WORKSPACE}/springboot/springboot/docker-compose.yml ubuntu@13.48.5.190:/home/ubuntu/
+        withCredentials([sshUserPrivateKey(
+            credentialsId: 'weather-key',  // ID from Step 1
+            keyFileVariable: 'Key',   // temporary variable pointing to key file
+            usernameVariable: 'ubuntu'       // temporary variable pointing to username
+        )]) {
+            sh '''
+                # Copy docker-compose.yml to EC2
+                scp -o StrictHostKeyChecking=no -i $KEY_FILE ${WORKSPACE}/springboot/springboot/docker-compose.yml $USER@13.48.5.190:/home/ubuntu/
 
-            # SSH into EC2 and deploy
-            ssh -o StrictHostKeyChecking=no -i /home/jenkins/.ssh/weather-key.pem ubuntu@13.48.5.190 << EOF
-                set -e
-
-                echo "Stopping old containers..."
-                docker compose down || true
-                docker rm -f weather-app || true
-
-                echo "Killing any process using port 8080..."
-                sudo fuser -k 8080/tcp || true
-
-                echo "Pulling latest Docker image..."
-                docker pull ssk2003/weather-app1:latest
-
-                echo "Starting container..."
-                docker compose up -d --force-recreate --remove-orphans
-
-                echo "Deployment finished successfully!"
+                # SSH into EC2 and deploy
+                ssh -o StrictHostKeyChecking=no -i $KEY_FILE $USER@13.48.5.190 << EOF
+                    set -e
+                    docker compose down || true
+                    docker rm -f weather-app || true
+                    fuser -k 8080/tcp || true
+                    docker pull ssk2003/weather-app1:latest
+                    docker compose up -d --force-recreate --remove-orphans
 EOF
-        '''
+            '''
+        }
     }
 }
 
