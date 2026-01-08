@@ -47,25 +47,25 @@ pipeline {
 }
 
 
-        stage('Deploy to EC2') {
+       stage('Deploy to EC2') {
     steps {
         withCredentials([sshUserPrivateKey(
             credentialsId: 'weather-key',
             keyFileVariable: 'Key',
             usernameVariable: 'EC2_USER'
         )]) {
-            sh '''
+            sh '''#!/bin/bash
                 echo "Using key: $Key"
                 echo "Using user: $EC2_USER"
 
                 # Copy docker-compose.yml to EC2
                 scp -o StrictHostKeyChecking=no \
                     -i "$Key" \
-                    ${WORKSPACE}/springboot/springboot/docker-compose.yml \
-                    $EC2_USER@13.48.5.190:/home/ubuntu/
+                    "${WORKSPACE}/springboot/springboot/docker-compose.yml" \
+                    "$EC2_USER@13.48.5.190:/home/ubuntu/"
 
-                # SSH into EC2 and deploy
-                ssh -o StrictHostKeyChecking=no -tt -i "$Key" $EC2_USER@13.48.5.190 << 'EOF'
+                # SSH into EC2 and deploy (FORCED)
+                ssh -o StrictHostKeyChecking=no -i "$Key" "$EC2_USER@13.48.5.190" 'bash -s' << 'EOF'
 set -e
 cd /home/ubuntu
 docker compose down || true
@@ -73,11 +73,13 @@ docker rm -f weather-app || true
 fuser -k 8080/tcp || true
 docker pull ssk2003/weather-app1:latest
 docker compose up -d --force-recreate --remove-orphans
+echo "DEPLOYMENT SUCCESS"
 EOF
             '''
         }
     }
 }
+
 
 
 
