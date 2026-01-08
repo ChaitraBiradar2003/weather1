@@ -69,7 +69,7 @@ scp -o StrictHostKeyChecking=no -i "$KEY" \
 "$EC2_USER@$EC2_IP:/home/ubuntu/"
 
 echo "Deploying on EC2..."
-ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" <<EOF
+ssh -tt -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" <<EOF
 set -eux
 
 sudo fuser -k 8080/tcp || true
