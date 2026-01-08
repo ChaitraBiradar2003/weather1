@@ -155,7 +155,7 @@
         <input type="text" id="searchBox" placeholder="Enter city or city,country">
         <button id="searchBtn">Search</button>
     </div>
-    <button id="locationBtn">Use Current Location</button>
+    <!--<button id="locationBtn">Use Current Location</button>-->
 
     <div class="error">
         <p>You Entered Invalid city name</p>
@@ -285,7 +285,7 @@ async function getAirQuality(lat, lon){
 }
 
 // ================= CURRENT LOCATION =================
-locationBtn.addEventListener("click", ()=>{
+/*locationBtn.addEventListener("click", ()=>{
     navigator.geolocation.getCurrentPosition(async (pos)=>{
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
@@ -295,7 +295,7 @@ locationBtn.addEventListener("click", ()=>{
         getFiveDayForecast(lat, lon);
         getAirQuality(lat, lon);
     });
-});
+}); */
 
 // ================= EVENTS =================
 searchBtn.addEventListener("click", ()=>checkWeather(searchBox.value));
