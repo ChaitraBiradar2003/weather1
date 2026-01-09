@@ -84,16 +84,16 @@ scp -o StrictHostKeyChecking=no -i "$KEY" \
 echo "Killing old process on port 8080..."
 ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" "sudo fuser -k 8080/tcp || true"
 
-echo "Stopping old containers..."
+echo "Stopping old containers and removing orphans..."
 ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" "
 cd /home/ubuntu
 docker compose down -v --remove-orphans || true
 "
 
-echo "Pulling new Docker image..."
+echo "Pulling latest Docker image..."
 ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" "docker pull ${IMAGE}"
 
-echo "Starting container..."
+echo "Starting containers..."
 ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" "
 cd /home/ubuntu
 docker compose up -d --force-recreate
