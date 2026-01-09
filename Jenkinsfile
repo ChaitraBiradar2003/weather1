@@ -51,7 +51,7 @@ stage('Deploy to EC2') {
     steps {
         withCredentials([sshUserPrivateKey(credentialsId: 'weather-key', keyFileVariable: 'KEY', usernameVariable: 'EC2_USER')]) {
             script {
-                def EC2_IP = "13.48.5.190"
+                def EC2_IP = "13.60.90.135"
                 def IMAGE = "ssk2003/weather-app1:latest"
                 def APP_NAME = "weather-app"
                 
