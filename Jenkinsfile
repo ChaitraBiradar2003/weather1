@@ -47,7 +47,37 @@ pipeline {
 }
 
 
+stage('Deploy to EC2') {
+    steps {
+        withCredentials([sshUserPrivateKey(credentialsId: 'weather-key', keyFileVariable: 'KEY', usernameVariable: 'EC2_USER')]) {
+            script {
+                def EC2_IP = "13.48.5.190"
+                def IMAGE = "ssk2003/weather-app1:latest"
+                def APP_NAME = "weather-app"
+                
+                echo "Copying docker-compose.yml to EC2..."
+                sh "scp -o StrictHostKeyChecking=no -i $KEY $WORKSPACE/springboot/springboot/docker-compose.yml $EC2_USER@$EC2_IP:/home/ubuntu/"
 
+                echo "Killing old process on port 8080..."
+                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'sudo fuser -k 8080/tcp || true'"
+
+                echo "Stopping old containers..."
+                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'docker compose down || true'"
+
+                echo "Removing old container..."
+                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'docker rm -f $APP_NAME || true'"
+
+                echo "Pulling new Docker image..."
+                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'docker pull $IMAGE'"
+
+                echo "Starting container..."
+                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'docker compose up -d --force-recreate'"
+
+                echo "Deployment successful!"
+            }
+        }
+    }
+}
 
 
 
@@ -61,52 +91,6 @@ pipeline {
 
 
         
-stage('Deploy to EC2') {
-    steps {
-        withCredentials([
-            sshUserPrivateKey(
-                credentialsId: 'weather-key',
-                keyFileVariable: 'KEY',
-                usernameVariable: 'EC2_USER'
-            )
-        ]) {
-            sh '''#!/bin/bash
-set -eux
-
-EC2_IP="13.60.90.135"
-IMAGE="ssk2003/weather-app1:latest"
-DEPLOY_DIR="/home/ubuntu"
-
-echo "Copying docker-compose.yml to EC2..."
-scp -o StrictHostKeyChecking=no -i "$KEY" \
-"$WORKSPACE/springboot/springboot/docker-compose.yml" \
-"$EC2_USER@$EC2_IP:$DEPLOY_DIR/"
-
-echo "Deploying on EC2..."
-ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" <<'EOF'
-set -eux
-
-cd /home/ubuntu
-
-# Kill any process using port 8080
-sudo fuser -k 8080/tcp || true
-
-# Stop and remove all containers for this project
-docker compose down -v --remove-orphans || true
-
-# Pull latest image
-docker pull ssk2003/weather-app1:latest
-
-# Start containers
-docker compose up -d --force-recreate
-
-echo "Deployment successful"
-EOF
-'''
-        }
-    }
-}
-
 
     }
 }
