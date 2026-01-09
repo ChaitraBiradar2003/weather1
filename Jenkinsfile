@@ -75,35 +75,38 @@ set -eux
 
 EC2_IP="13.60.90.135"
 IMAGE="ssk2003/weather-app1:latest"
+DEPLOY_DIR="/home/ubuntu"
 
 echo "Copying docker-compose.yml to EC2..."
 scp -o StrictHostKeyChecking=no -i "$KEY" \
 "$WORKSPACE/springboot/springboot/docker-compose.yml" \
-"$EC2_USER@$EC2_IP:/home/ubuntu/"
+"$EC2_USER@$EC2_IP:$DEPLOY_DIR/"
 
-echo "Killing old process on port 8080..."
-ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" "sudo fuser -k 8080/tcp || true"
+echo "Deploying on EC2..."
+ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" <<'EOF'
+set -eux
 
-echo "Stopping old containers and removing orphans..."
-ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" "
 cd /home/ubuntu
+
+# Kill any process using port 8080
+sudo fuser -k 8080/tcp || true
+
+# Stop and remove all containers for this project
 docker compose down -v --remove-orphans || true
-"
 
-echo "Pulling latest Docker image..."
-ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" "docker pull ${IMAGE}"
+# Pull latest image
+docker pull ssk2003/weather-app1:latest
 
-echo "Starting containers..."
-ssh -o StrictHostKeyChecking=no -i "$KEY" "$EC2_USER@$EC2_IP" "
-cd /home/ubuntu
+# Start containers
 docker compose up -d --force-recreate
-"
 
 echo "Deployment successful"
+EOF
 '''
         }
     }
 }
+
 
     }
 }
