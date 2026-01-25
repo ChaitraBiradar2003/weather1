@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        IMAGE = "ssk2003/weather-app1"
-        DOCKER_CREDS = credentials('dockerhub-creds')
+        IMAGE = "24p1247/weather-app1"
+        DOCKER_CREDS = credentials('docker_cred')
     }
 
     stages {
@@ -34,13 +34,13 @@ pipeline {
         stage('Docker Login and Push') {
     steps {
         withCredentials([usernamePassword(
-            credentialsId: 'dockerhub-creds',
+            credentialsId: 'docker_cred',
             usernameVariable: 'DOCKER_USER',
             passwordVariable: 'DOCKER_PASS'
         )]) {
             sh '''
                 echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                docker push ssk2003/weather-app1:latest
+                docker push 24p1247/weather-app1:latest
             '''
         }
     }
@@ -49,10 +49,10 @@ pipeline {
 
 stage('Deploy to EC2') {
     steps {
-        withCredentials([sshUserPrivateKey(credentialsId: 'weather-key', keyFileVariable: 'KEY', usernameVariable: 'EC2_USER')]) {
+        withCredentials([sshUserPrivateKey(credentialsId: 'ec2_cred', keyFileVariable: 'KEY', usernameVariable: 'EC2_USER')]) {
             script {
-                def EC2_IP = "13.49.65.57"
-                def IMAGE = "ssk2003/weather-app1:latest"
+                def EC2_IP = "13.50.4.90"
+                def IMAGE = "24p1247/weather-app1:latest"
                 def APP_NAME = "weather-app"
                 
                 echo "Copying docker-compose.yml to EC2..."
