@@ -1,6 +1,6 @@
 services:
   weather:
-    image: ssk2003/weather-app1:latest
+    image: 24p1247/weather-app1:latest
     ports:
       - "8081:8080"   # maps EC2 port 8080 to your Spring Boot app port 8081
     restart: always
