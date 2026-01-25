@@ -152,7 +152,7 @@
 
     <!-- Search -->
     <div class="search-container">
-        <input type="text" id="searchBox" placeholder="Enter state,country">
+        <input type="text" id="searchBox" placeholder="Enter city,country">
         <button id="searchBtn">Search</button>
     </div>
     <!--<button id="locationBtn">Use Current Location</button>-->
@@ -302,7 +302,7 @@ searchBtn.addEventListener("click", ()=>checkWeather(searchBox.value));
 searchBox.addEventListener("keyup", e=>{if(e.key==="Enter") checkWeather(searchBox.value);});
 
 // ================= DEFAULT LOAD =================
-window.addEventListener("load", ()=>checkWeather("Belagavi,IN"));
+//window.addEventListener("load", ()=>checkWeather("Belagavi,IN"));
 
 </script>
 </body>
