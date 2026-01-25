@@ -49,39 +49,33 @@ pipeline {
 
 stage('Deploy to EC2') {
     steps {
-        withCredentials([sshUserPrivateKey(credentialsId: 'ec2_cred', keyFileVariable: 'KEY', usernameVariable: 'EC2_USER')]) {
+        withCredentials([sshUserPrivateKey(
+            credentialsId: 'ec2_cred',
+            keyFileVariable: 'KEY',
+            usernameVariable: 'EC2_USER'
+        )]) {
             script {
                 def EC2_IP = "13.50.4.90"
                 def IMAGE = "24p1247/weather-app1:latest"
                 def APP_NAME = "weather-app"
-                
-                echo "Copying docker-compose.yml to EC2..."
-                sh "scp -o StrictHostKeyChecking=no -i $KEY $WORKSPACE/springboot/springboot/docker-compose.yml $EC2_USER@$EC2_IP:/home/ubuntu/"
 
-                echo "Killing old process on port 8080..."
-                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'sudo fuser -k 8080/tcp || true'"
+                echo "Copying docker-compose.yml to EC2..."
+                sh "scp -o StrictHostKeyChecking=no -i $KEY $WORKSPACE/springboot/springboot/docker-compose.yml $EC2_USER@$EC2_IP:/home/ubuntu/weather1/"
 
                 echo "Stopping old containers..."
-                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'docker compose down || true'"
-
-                echo "Removing old container..."
-                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'docker rm -f $APP_NAME || true'"
+                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'cd /home/ubuntu/weather1 && docker-compose down || true'"
 
                 echo "Pulling new Docker image..."
                 sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'docker pull $IMAGE'"
 
-                echo "Starting container..."
-                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'docker compose up -d --force-recreate'"
+                echo "Starting containers..."
+                sh "ssh -o StrictHostKeyChecking=no -i $KEY $EC2_USER@$EC2_IP 'cd /home/ubuntu/weather1 && docker-compose up -d --force-recreate'"
 
                 echo "Deployment successful!"
             }
         }
     }
 }
-
-
-
-
 
 
 
