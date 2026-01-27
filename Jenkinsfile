@@ -55,7 +55,7 @@ stage('Deploy to EC2') {
             usernameVariable: 'EC2_USER'
         )]) {
             script {
-                def EC2_IP = "13.60.61.253"
+                def EC2_IP = "13.53.38.37"
                 def IMAGE = "24p1247/weather-app1:latest"
                 def APP_NAME = "weather-app"
 
